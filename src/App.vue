@@ -1,17 +1,20 @@
 <template>
   <v-app>
     <v-main>
-      <FormSat />
+      <FormPrueba/>
+      <!-- <FormSat /> -->
     </v-main>
   </v-app>
 </template>
 
 <script>
-import FormSat from "./components/FormSat.vue";
+/* import FormSat from "./components/FormSat.vue";
+ */import FormPrueba from "./components/FormPrueba.vue";
 export default {
   name: "App",
   components: {
-    FormSat,
+    FormPrueba,
+    /* FormSat, */
   },
   data() {
     return {};
