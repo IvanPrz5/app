@@ -1,30 +1,19 @@
 <template>
   <v-container>
-    <v-overflow-btn
-      class="my-2"
-      label="Aduana"
-      v-model="tablaData"
-      :items="tablas"
-      @change="selectTabla"
-    ></v-overflow-btn>
     <v-data-table :headers="headers" :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
-          <v-toolbar-title>{{ algo }}</v-toolbar-title>
+          <v-toolbar-title>Codigo Postal</v-toolbar-title>
           <v-divider class="mx-15" inset vertical></v-divider>
           <v-spacer></v-spacer>
           <template>
             <v-dialog v-model="dialog" max-width="500px">
               <template v-slot:activator="{ on, attrs }">
-                <v-btn
-                  color="success"
-                  dark
-                  v-bind="attrs"
-                  v-on="on"
-                  @click="postMapping"
-                >
+                <v-btn color="success" dark v-bind="attrs" v-on="on" @click="postMapping">
                   <v-icon>mdi-plus</v-icon>
                 </v-btn>
+                <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
+                  hide-details></v-text-field>
               </template>
               <v-card>
                 <v-card-title>
@@ -32,21 +21,21 @@
                 </v-card-title>
                 <v-card-text>
                   <v-container>
-                    <v-row>
+                    <v-row @submit.prevent="save">
                       <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="Codigo"></v-text-field>
+                        <v-text-field label="Clave" v-model="customer.customerClave" ></v-text-field>
                       </v-col>
                       <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="Descripcion"></v-text-field>
+                        <v-text-field label="Estado"></v-text-field>
                       </v-col>
                       <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="Tipo"></v-text-field>
+                        <v-text-field label="ID Municipio"></v-text-field>
                       </v-col>
                       <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="Retencion"></v-text-field>
+                        <v-text-field label="ID Localidad"></v-text-field>
                       </v-col>
                       <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="Traslado"></v-text-field>
+                        <v-text-field label="Status"></v-text-field>
                       </v-col>
                     </v-row>
                   </v-container>
@@ -64,17 +53,11 @@
             </v-dialog>
             <v-dialog v-model="dialogDelete" max-width="500px">
               <v-card>
-                <v-card-title class="text"
-                  >Eliminar este elemento?</v-card-title
-                >
+                <v-card-title class="text">Eliminar este elemento?</v-card-title>
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                  <v-btn color="blue darken-1" text @click="closeDelete"
-                    >Cancelar</v-btn
-                  >
-                  <v-btn color="blue darken-1" text @click="deleteItemConfirm"
-                    >Continuar</v-btn
-                  >
+                  <v-btn color="blue darken-1" text @click="closeDelete">Cancelar</v-btn>
+                  <v-btn color="blue darken-1" text @click="deleteItemConfirm">Continuar</v-btn>
                   <v-spacer></v-spacer>
                 </v-card-actions>
               </v-card>
@@ -95,20 +78,23 @@ import axios from "axios";
 /* import ModalAdd from "./ModalAdd.vue"; */
 
 export default {
-  name: "FormPrueba",
+  name: "TablaCFDI",
   data: () => ({
     headers: [
       {
-        text: "ID",
+        text: "Clave",
         align: "start",
-        value: "codigo",
+        value: "clave",
         sortable: false,
       },
-      { text: "Descripcion", value: "descripcion", sortable: false },
-      //{ text: "Status", value: "status", sortable: false },
+      { text: "Estado", value: "estado", sortable: false },
+      { text: "Cod Municipio", value: "cmunicipio", sortable: false },
+      { text: "Cod Localidad", value: "clocalidad", sortable: false },
+      { text: "ID Municipio", value: "idmunicipio", sortable: false },
+      { text: "ID Localidad", value: "idlocalidad", sortable: false },
       { text: "Actions", value: "actions", sortable: false },
     ],
-    algo: "Aduana",
+    titleTable: "Aduana",
     desserts: [],
     result: [],
     dialog: false,
@@ -116,19 +102,6 @@ export default {
     editedIndex: -1,
     editedItem: {},
     defaultItem: {},
-    tablaData: "",
-    tablas: [
-      "Aduana",
-      "Exportacion",
-      "Meses",
-      "MetodoPago",
-      "Moneda",
-      "Pais",
-      "Periodicidad",
-      "TipoComprobante",
-      "TipoRelacion",
-      "ObjetoImpuesto",
-    ],
   }),
   created() {
     this.initialize();
@@ -149,47 +122,18 @@ export default {
   methods: {
     initialize() {
       axios
-        .get("http://localhost:8081/Aduana")
+        .get("http://localhost:8081/CodigoPostal")
         .then((response) => {
           this.result = response.data.data;
           //console.log(response.data);
           for (let i = 0; i < response.data.length; i++) {
             this.desserts.push({
-              codigo: response.data[i].id,
-              descripcion: response.data[i].descripcion,
-              //status: response.data[i].status,
-            });
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    },
-    selectTabla() {
-      let tablas = {
-        Aduana: "Aduana",
-        Exportacion: "Exportacion",
-        Meses: "Meses",
-        MetodoPago: "MetodoPago",
-        Moneda:"Moneda",
-        Pais: "Pais",
-        Periodicidad: "Periodicidad",
-        TipoComprobante: "TipoComprobante",
-        TipoRelacion: "TipoRelacion",
-        ObjetoImpuesto: "ObjetoImp",
-      };
-      this.desserts.length = "";
-      let selectTabla = tablas[this.tablaData];
-      //console.log(selectTabla);
-      this.algo = tablas[this.tablaData];
-      axios
-        .get("http://localhost:8081/" + selectTabla)
-        .then((response) => {
-          this.result = response.data.data;
-          for (let i = 0; i < response.data.length; i++) {
-            this.desserts.push({
-              codigo: response.data[i].id,
-              descripcion: response.data[i].descripcion,
+              clave: response.data[i].ccodigoPostal,
+              estado: response.data[i].estado.cestado,
+              cmunicipio: response.data[i].municipios.cmunicipio,
+              clocalidad: response.data[i].localidades.clocalidad,
+              idmunicipio: response.data[i].municipios.idMunicipio,
+              idlocalidad: response.data[i].localidades.idLocalidad,
               status: response.data[i].status,
             });
           }
@@ -198,7 +142,7 @@ export default {
           console.log(err);
         });
     },
-    postMapping() {},
+    postMapping() { },
     save() {
       if (this.editedIndex > -1) {
         Object.assign(this.desserts[this.editedIndex], this.editedItem);
@@ -238,5 +182,3 @@ export default {
   },
 };
 </script>
-
-<style></style>

@@ -1,11 +1,9 @@
 <template>
   <v-container>
-    <v-overflow-btn class="my-2" label="Aduana" v-model="tablaData" :items="tablas"
-      @change="selectTabla"></v-overflow-btn>
-    <v-data-table :search="search" :headers="headers" :items="desserts" class="elevation-1">
+    <v-data-table :headers="headers" :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
-          <v-toolbar-title>{{ titleTable }}</v-toolbar-title>
+          <v-toolbar-title>Tasa o Cuota</v-toolbar-title>
           <v-divider class="mx-15" inset vertical></v-divider>
           <v-spacer></v-spacer>
           <template>
@@ -14,9 +12,6 @@
                 <v-btn color="success" dark v-bind="attrs" v-on="on" @click="postMapping">
                   <v-icon>mdi-plus</v-icon>
                 </v-btn>
-                <v-spacer></v-spacer>
-                <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line hide-details>
-                </v-text-field>
               </template>
               <v-card>
                 <v-card-title>
@@ -24,21 +19,29 @@
                 </v-card-title>
                 <v-card-text>
                   <v-container>
-                    <form>
-                      <v-row>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Codigo" v-model="id"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Descripcion" v-model="descripcion"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-switch label="Status" v-model="status"></v-switch>
-                        </v-col>
-                      </v-row>
-                      <!-- <input type="submit"> -->
-                      <v-btn color="blue darken-1" text @click="postMapping">Agregar</v-btn>
-                    </form>
+                    <v-row>
+                      <v-col cols="12" sm="6" md="4">
+                        <v-text-field label="Factor"></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6" md="4">
+                        <v-text-field label="Impuesto"></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6" md="4">
+                        <v-text-field label="Rango o Fijo"></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6" md="4">
+                        <v-text-field label="Retencion"></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6" md="4">
+                        <v-text-field label="Traslado"></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6" md="4">
+                        <v-text-field label="Valor Maximo"></v-text-field>
+                      </v-col>
+                      <v-col cols="12" sm="6" md="4">
+                        <v-text-field label="Status"></v-text-field>
+                      </v-col>
+                    </v-row>
                   </v-container>
                 </v-card-text>
                 <v-card-actions>
@@ -68,7 +71,7 @@
       </template>
       <template v-slot:[`item.actions`]="{ item }">
         <v-icon small class="mr-6" @click="editItem(item)">mdi-pencil</v-icon>
-        <v-icon small @click="deleteMapping(role)"> mdi-delete </v-icon>
+        <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
       </template>
     </v-data-table>
   </v-container>
@@ -79,44 +82,31 @@ import axios from "axios";
 /* import ModalAdd from "./ModalAdd.vue"; */
 
 export default {
-  name: "FormSat",
+  name: "TablaTasaCuota",
   data: () => ({
-    search: "",
     headers: [
       {
-        text: "ID",
+        text: "Factor",
         align: "start",
-        value: "codigo",
+        value: "factor",
         sortable: false,
       },
-      { text: "Descripcion", value: "descripcion", sortable: false },
-      //{ text: "Status", value: "status", sortable: false },
+      { text: "Impuesto", value: "impuesto", sortable: false },
+      { text: "Rango o Fijo", value: "rangofijo", sortable: false },
+      { text: "Retencion", value: "retencion", sortable: false },
+      { text: "Traslado", value: "traslado", sortable: false },
+      { text: "Valor Maximo", value: "valormaximo", sortable: false },
       { text: "Actions", value: "actions", sortable: false },
     ],
     titleTable: "Aduana",
     desserts: [],
-    result: {},
+    result: [],
     dialog: false,
     dialogDelete: false,
     editedIndex: -1,
     editedItem: {},
     defaultItem: {},
-    tablaData: "",
-    tablas: [
-      "Aduana",
-      "Exportacion",
-      "Meses",
-      "MetodoPago",
-      "Moneda",
-      "ObjetoImpuesto",
-      "Pais",
-      "Periodicidad",
-      "TipoComprobante",
-      "TipoRelacion",
-    ],
-    id: "",
-    descripcion: "",
-    status: "",
+    
   }),
   created() {
     this.initialize();
@@ -137,14 +127,18 @@ export default {
   methods: {
     initialize() {
       axios
-        .get("http://localhost:8081/Aduana")
+        .get("http://localhost:8081/TasaoCuota")
         .then((response) => {
           this.result = response.data.data;
-          //console.log(response.data);
+          console.log(response.data);
           for (let i = 0; i < response.data.length; i++) {
             this.desserts.push({
-              codigo: response.data[i].id,
-              descripcion: response.data[i].descripcion,
+              factor: response.data[i].factor,
+              impuesto: response.data[i].impuesto,
+              rangofijo: response.data[i].rangoFijo,
+              retencion: response.data[i].retencion,
+              traslado: response.data[i].traslado,
+              valormaximo: response.data[i].valorMaximo,
               status: response.data[i].status,
             });
           }
@@ -153,70 +147,7 @@ export default {
           console.log(err);
         });
     },
-    selectTabla() {
-      let tablas = {
-        Aduana: "Aduana",
-        Exportacion: "Exportacion",
-        Meses: "Meses",
-        MetodoPago: "MetodoPago",
-        Moneda: "Moneda",
-        Pais: "Pais",
-        Periodicidad: "Periodicidad",
-        TipoComprobante: "TipoComprobante",
-        TipoRelacion: "TipoRelacion",
-        ObjetoImpuesto: "ObjetoImp",
-      };
-      this.desserts.length = "";
-      let selectTabla = tablas[this.tablaData];
-      //console.log(selectTabla);
-      this.titleTable = tablas[this.tablaData];
-      axios
-        .get("http://localhost:8081/" + selectTabla)
-        .then((response) => {
-          this.result = response.data.data;
-          for (let i = 0; i < response.data.length; i++) {
-            this.desserts.push({
-              codigo: response.data[i].id,
-              descripcion: response.data[i].descripcion,
-              //status: response.data[i].status,
-            });
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-        });
-    },
-    postMapping: function () {
-      if (this.id != "" && this.id != null) {
-        console.log("entro");
-        axios
-          .post("http://localhost:8081/Aduana", {
-            id: this.id,
-            descripcion: this.descripcion,
-            status: this.status,
-          })
-          .then((saveData) => {
-            console.log(saveData);
-            this.desserts.push(saveData.data);
-            this.id = "";
-            this.descripcion = "";
-            this.status = false;
-          });
-      } else {
-        axios
-          .post("http://localhost:8081/Aduana", {
-            id: this.id,
-            descripcion: this.descripcion,
-            status: this.status,
-          })
-          .then((savedRole) => {
-            console.log(savedRole);
-            this.id = "";
-            this.descripcion = "";
-            this.status = false;
-          });
-      }
-    },
+    postMapping() {},
     save() {
       if (this.editedIndex > -1) {
         Object.assign(this.desserts[this.editedIndex], this.editedItem);
@@ -256,7 +187,3 @@ export default {
   },
 };
 </script>
-
-<style>
-
-</style>
