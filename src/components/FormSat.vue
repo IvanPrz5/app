@@ -11,7 +11,7 @@
           <template>
             <v-dialog v-model="dialog" max-width="500px">
               <template v-slot:activator="{ on, attrs }">
-                <v-btn color="success" dark v-bind="attrs" v-on="on" @click="postMapping">
+                <v-btn color="success" dark v-bind="attrs" v-on="on">
                   <v-icon>mdi-plus</v-icon>
                 </v-btn>
                 <v-spacer></v-spacer>
@@ -27,17 +27,15 @@
                     <form>
                       <v-row>
                         <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Codigo" v-model="id"></v-text-field>
+                          <v-text-field label="Codigo" v-model="editedItem.codigo"></v-text-field>
                         </v-col>
                         <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Descripcion" v-model="descripcion"></v-text-field>
+                          <v-text-field label="Descripcion" v-model="editedItem.descripcion"></v-text-field>
                         </v-col>
                         <v-col cols="12" sm="6" md="4">
-                          <v-switch label="Status" v-model="status"></v-switch>
+                          <v-switch label="Status" v-model="editedItem.status"></v-switch>
                         </v-col>
                       </v-row>
-                      <!-- <input type="submit"> -->
-                      <v-btn color="blue darken-1" text @click="postMapping">Agregar</v-btn>
                     </form>
                   </v-container>
                 </v-card-text>
@@ -46,7 +44,7 @@
                   <v-btn color="blue darken-1" text @click="close">
                     Cancelar
                   </v-btn>
-                  <v-btn color="blue darken-1" text @click="save">
+                  <v-btn color="blue darken-1" text @click="selecType">
                     Continuar
                   </v-btn>
                 </v-card-actions>
@@ -67,8 +65,8 @@
         </v-toolbar>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <v-icon small class="mr-6" @click="editItem(item)">mdi-pencil</v-icon>
-        <v-icon small @click="deleteMapping(role)"> mdi-delete </v-icon>
+        <v-icon small class="mr-6" @click="putMapping(item)"> mdi-pencil </v-icon>
+        <v-icon small @click="deleteMapping(item.codigo)"> mdi-delete </v-icon>
       </template>
     </v-data-table>
   </v-container>
@@ -90,7 +88,6 @@ export default {
         sortable: false,
       },
       { text: "Descripcion", value: "descripcion", sortable: false },
-      //{ text: "Status", value: "status", sortable: false },
       { text: "Actions", value: "actions", sortable: false },
     ],
     titleTable: "Aduana",
@@ -99,9 +96,15 @@ export default {
     dialog: false,
     dialogDelete: false,
     editedIndex: -1,
-    editedItem: {},
+    editedItem: [
+      {
+        codigo: "",
+        descripcion: "",
+        status: "",
+      },
+    ],
     defaultItem: {},
-    tablaData: "",
+    tablaData: "Aduana",
     tablas: [
       "Aduana",
       "Exportacion",
@@ -114,9 +117,18 @@ export default {
       "TipoComprobante",
       "TipoRelacion",
     ],
-    id: "",
-    descripcion: "",
-    status: "",
+    tablasD: {
+      Aduana: "Aduana",
+      Exportacion: "Exportacion",
+      Meses: "Meses",
+      MetodoPago: "MetodoPago",
+      Moneda: "Moneda",
+      Pais: "Pais",
+      Periodicidad: "Periodicidad",
+      TipoComprobante: "TipoComprobante",
+      TipoRelacion: "TipoRelacion",
+      ObjetoImpuesto: "ObjetoImp",
+    },
   }),
   created() {
     this.initialize();
@@ -133,6 +145,9 @@ export default {
     formTitle() {
       return this.editedIndex === -1 ? "Agregar" : "Editar";
     },
+    selecType(){
+      return this.editedIndex === -1 ? this.postMapping : this.putMapping;
+    }
   },
   methods: {
     initialize() {
@@ -154,22 +169,9 @@ export default {
         });
     },
     selectTabla() {
-      let tablas = {
-        Aduana: "Aduana",
-        Exportacion: "Exportacion",
-        Meses: "Meses",
-        MetodoPago: "MetodoPago",
-        Moneda: "Moneda",
-        Pais: "Pais",
-        Periodicidad: "Periodicidad",
-        TipoComprobante: "TipoComprobante",
-        TipoRelacion: "TipoRelacion",
-        ObjetoImpuesto: "ObjetoImp",
-      };
       this.desserts.length = "";
-      let selectTabla = tablas[this.tablaData];
-      //console.log(selectTabla);
-      this.titleTable = tablas[this.tablaData];
+      let selectTabla = this.tablasD[this.tablaData];
+      this.titleTable = this.tablasD[this.tablaData];
       axios
         .get("http://localhost:8081/" + selectTabla)
         .then((response) => {
@@ -187,43 +189,49 @@ export default {
         });
     },
     postMapping: function () {
-      if (this.id != "" && this.id != null) {
-        console.log("entro");
+      let selectTabla = this.tablasD[this.tablaData];
+      if (this.id != "" || this.id != null) {
         axios
-          .post("http://localhost:8081/Aduana", {
-            id: this.id,
-            descripcion: this.descripcion,
-            status: this.status,
+          .post("http://localhost:8081/" + selectTabla, {
+            id: this.editedItem.codigo,
+            descripcion: this.editedItem.descripcion,
+            status: this.editedItem.status,
           })
-          .then((saveData) => {
-            console.log(saveData);
-            this.desserts.push(saveData.data);
-            this.id = "";
-            this.descripcion = "";
-            this.status = false;
-          });
-      } else {
-        axios
-          .post("http://localhost:8081/Aduana", {
-            id: this.id,
-            descripcion: this.descripcion,
-            status: this.status,
-          })
-          .then((savedRole) => {
-            console.log(savedRole);
-            this.id = "";
-            this.descripcion = "";
-            this.status = false;
+          .then((response) => {
+            this.desserts.push({
+              codigo: response.data.id,
+              descripcion: response.data.descripcion,
+              status: response.data.status,
+            });
+            this.close();
           });
       }
     },
-    save() {
-      if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedItem);
-      } else {
-        this.desserts.push(this.editedItem);
-      }
-      this.close();
+    putMapping: function (codigo) {
+      let selectTabla = this.tablasD[this.tablaData];
+      console.log(codigo);
+      console.log("http://localhost:8081/" + selectTabla + "/" + codigo);
+        axios
+          .post("http://localhost:8081/" + selectTabla + "/" + codigo.id, {
+            id: codigo.id,
+            descripcion: codigo.descripcion,
+            status: codigo.status,
+          })
+          .then((response) => {
+            this.desserts.push({
+              codigo: response.data.id,
+              descripcion: response.data.descripcion,
+              status: response.data.status,
+            });
+            this.close();
+          });
+      
+    },
+    deleteMapping: function (codigo) {
+      console.log(codigo)
+      let selectTabla = this.tablasD[this.tablaData];
+      axios.delete("http://localhost:8081/" + selectTabla + "/" + codigo);
+      this.desserts.splice(this.editedIndex, 1);
     },
     close() {
       this.dialog = false;
