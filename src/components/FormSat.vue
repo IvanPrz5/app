@@ -1,21 +1,19 @@
 <template>
   <v-container>
-    <v-overflow-btn class="my-2" label="Aduana" v-model="tablaData" :items="tablas"
-      @change="selectTabla"></v-overflow-btn>
+    <v-overflow-btn class="my-2" label="Aduana" v-model="tablaData" :items="tablas" @change="showData"></v-overflow-btn>
     <v-data-table :search="search" :headers="headers" :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>{{ titleTable }}</v-toolbar-title>
-          <v-divider class="mx-15" inset vertical></v-divider>
-          <v-spacer></v-spacer>
+          <v-divider class="mx-6" inset vertical></v-divider>
           <template>
             <v-dialog v-model="dialog" max-width="500px">
               <template v-slot:activator="{ on, attrs }">
                 <v-btn color="success" dark v-bind="attrs" v-on="on">
                   <v-icon>mdi-plus</v-icon>
                 </v-btn>
-                <v-spacer></v-spacer>
-                <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line hide-details>
+                <v-divider class="mx-6" inset vertical></v-divider>
+                <v-text-field v-model="search" append-icon="mdi-magnify" label="Buscar" hide-details>
                 </v-text-field>
               </template>
               <v-card>
@@ -24,19 +22,19 @@
                 </v-card-title>
                 <v-card-text>
                   <v-container>
-                    <form>
+                    <v-form ref="form" v-model="valid" lazy-validation>
                       <v-row>
                         <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Codigo" v-model="editedItem.codigo"></v-text-field>
+                          <v-text-field label="Codigo" v-model="editedItem.codigo" required></v-text-field>
                         </v-col>
                         <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Descripcion" v-model="editedItem.descripcion"></v-text-field>
+                          <v-text-field label="Descripcion" v-model="editedItem.descripcion" required></v-text-field>
                         </v-col>
                         <v-col cols="12" sm="6" md="4">
-                          <v-switch label="Status" v-model="editedItem.status"></v-switch>
+                          <v-switch label="Status" v-model="editedItem.status" required></v-switch>
                         </v-col>
                       </v-row>
-                    </form>
+                    </v-form>
                   </v-container>
                 </v-card-text>
                 <v-card-actions>
@@ -44,20 +42,9 @@
                   <v-btn color="blue darken-1" text @click="close">
                     Cancelar
                   </v-btn>
-                  <v-btn color="blue darken-1" text @click="selecType">
+                  <v-btn color="blue darken-1" text @click="saveData">
                     Continuar
                   </v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
-            <v-dialog v-model="dialogDelete" max-width="500px">
-              <v-card>
-                <v-card-title class="text">Eliminar este elemento?</v-card-title>
-                <v-card-actions>
-                  <v-spacer></v-spacer>
-                  <v-btn color="blue darken-1" text @click="closeDelete">Cancelar</v-btn>
-                  <v-btn color="blue darken-1" text @click="deleteItemConfirm">Continuar</v-btn>
-                  <v-spacer></v-spacer>
                 </v-card-actions>
               </v-card>
             </v-dialog>
@@ -65,8 +52,12 @@
         </v-toolbar>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <v-icon small class="mr-6" @click="putMapping(item)"> mdi-pencil </v-icon>
-        <v-icon small @click="deleteMapping(item.codigo)"> mdi-delete </v-icon>
+        <v-btn class="mr-3" elevation="1" color="primary" fab tile x-small @click="editItem(item)">
+          <v-icon small> mdi-pencil </v-icon>
+        </v-btn>
+        <v-btn elevation="1" color="error" fab tile x-small @click="deleteMapping(item.codigo)">
+        <v-icon small> mdi-delete </v-icon>
+        </v-btn>
       </template>
     </v-data-table>
   </v-container>
@@ -80,6 +71,7 @@ export default {
   name: "FormSat",
   data: () => ({
     search: "",
+    valid: true,
     headers: [
       {
         text: "ID",
@@ -87,8 +79,9 @@ export default {
         value: "codigo",
         sortable: false,
       },
-      { text: "Descripcion", value: "descripcion", sortable: false },
-      { text: "Actions", value: "actions", sortable: false },
+      { text: "Descripción", value: "descripcion", sortable: false },
+      { text: "Status", value: "status", sortable: false },
+      { text: "Opciones", value: "actions", sortable: false },
     ],
     titleTable: "Aduana",
     desserts: [],
@@ -129,6 +122,18 @@ export default {
       TipoRelacion: "TipoRelacion",
       ObjetoImpuesto: "ObjetoImp",
     },
+    tablasTitle: {
+      Aduana: "Aduana",
+      Exportacion: "Exportacion",
+      Meses: "Meses",
+      MetodoPago: "Metodo De Pago",
+      Moneda: "Moneda",
+      Pais: "Pais",
+      Periodicidad: "Periodicidad",
+      TipoComprobante: "Tipo De Comprobante",
+      TipoRelacion: "Tipo De Relacion",
+      ObjetoImpuesto: "Impuesto Al Objeto",
+    },
   }),
   created() {
     this.initialize();
@@ -145,9 +150,6 @@ export default {
     formTitle() {
       return this.editedIndex === -1 ? "Agregar" : "Editar";
     },
-    selecType(){
-      return this.editedIndex === -1 ? this.postMapping : this.putMapping;
-    }
   },
   methods: {
     initialize() {
@@ -168,70 +170,65 @@ export default {
           console.log(err);
         });
     },
-    selectTabla() {
+    showData() {
+      let selectTabla = this.tablasD[this.tablaData];
       this.desserts.length = "";
-      let selectTabla = this.tablasD[this.tablaData];
-      this.titleTable = this.tablasD[this.tablaData];
-      axios
-        .get("http://localhost:8081/" + selectTabla)
-        .then((response) => {
-          this.result = response.data.data;
-          for (let i = 0; i < response.data.length; i++) {
-            this.desserts.push({
-              codigo: response.data[i].id,
-              descripcion: response.data[i].descripcion,
-              //status: response.data[i].status,
-            });
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+      this.titleTable = this.tablasTitle[this.tablaData];
+      axios.get("http://localhost:8081/" + selectTabla).then((response) => {
+        this.result = response.data.data;
+        for (let i = 0; i < response.data.length; i++) {
+          this.desserts.push({
+            codigo: response.data[i].id,
+            descripcion: response.data[i].descripcion,
+            status: response.data[i].status,
+          });
+        }
+      });
     },
-    postMapping: function () {
+    saveData: function () {
       let selectTabla = this.tablasD[this.tablaData];
-      if (this.id != "" || this.id != null) {
+      // || this.id != "" || this.id != null
+      //console.log(this.editedItem.codigo);
+      if (this.editedIndex > -1) {
+        axios
+          .put(
+            "http://localhost:8081/" +
+            selectTabla +
+            "/" +
+            this.editedItem.codigo,
+            {
+              id: this.editedItem.codigo,
+              descripcion: this.editedItem.descripcion,
+              status: this.editedItem.status,
+            }
+          )
+          .then(() => {
+            // console.log(response);
+            this.showData();
+            this.close();
+          });
+      } else {
         axios
           .post("http://localhost:8081/" + selectTabla, {
             id: this.editedItem.codigo,
             descripcion: this.editedItem.descripcion,
             status: this.editedItem.status,
           })
-          .then((response) => {
-            this.desserts.push({
-              codigo: response.data.id,
-              descripcion: response.data.descripcion,
-              status: response.data.status,
-            });
+          .then(() => {
+            // console.log(response);
+            this.showData();
             this.close();
           });
       }
     },
-    putMapping: function (codigo) {
-      let selectTabla = this.tablasD[this.tablaData];
-      console.log(codigo);
-      console.log("http://localhost:8081/" + selectTabla + "/" + codigo);
-        axios
-          .post("http://localhost:8081/" + selectTabla + "/" + codigo.id, {
-            id: codigo.id,
-            descripcion: codigo.descripcion,
-            status: codigo.status,
-          })
-          .then((response) => {
-            this.desserts.push({
-              codigo: response.data.id,
-              descripcion: response.data.descripcion,
-              status: response.data.status,
-            });
-            this.close();
-          });
-      
-    },
     deleteMapping: function (codigo) {
-      console.log(codigo)
+      //console.log(codigo);
       let selectTabla = this.tablasD[this.tablaData];
-      axios.delete("http://localhost:8081/" + selectTabla + "/" + codigo);
-      this.desserts.splice(this.editedIndex, 1);
+      axios
+        .delete("http://localhost:8081/" + selectTabla + "/" + codigo)
+        .then(() => {
+          this.showData();
+        });
     },
     close() {
       this.dialog = false;
@@ -245,21 +242,8 @@ export default {
       this.editedItem = Object.assign({}, item);
       this.dialog = true;
     },
-    deleteItem(item) {
-      this.editedIndex = this.desserts.indexOf(item);
-      this.editedItem = Object.assign({}, item);
-      this.dialogDelete = true;
-    },
-    deleteItemConfirm() {
-      this.desserts.splice(this.editedIndex, 1);
-      this.closeDelete();
-    },
-    closeDelete() {
-      this.dialogDelete = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
+    validate() {
+      this.$refs.form.validate();
     },
   },
 };
