@@ -4,20 +4,16 @@
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Clave Producto Servicio</v-toolbar-title>
-          <v-divider class="mx-15" inset vertical></v-divider>
-          <v-spacer></v-spacer>
+          <v-divider class="mx-6" inset vertical></v-divider>
           <template>
             <v-dialog v-model="dialog" max-width="500px">
               <template v-slot:activator="{ on, attrs }">
-                <v-btn
-                  color="success"
-                  dark
-                  v-bind="attrs"
-                  v-on="on"
-                  @click="postMapping"
-                >
+                <v-btn color="success" dark v-bind="attrs" v-on="on">
                   <v-icon>mdi-plus</v-icon>
                 </v-btn>
+                <v-divider class="mx-6" inset vertical></v-divider>
+                <v-text-field v-model="search" append-icon="mdi-magnify" label="Buscar" hide-details>
+                </v-text-field>
               </template>
               <v-card>
                 <v-card-title>
@@ -46,25 +42,19 @@
                   <v-btn color="blue darken-1" text @click="close">
                     Cancelar
                   </v-btn>
-                  <v-btn color="blue darken-1" text @click="save">
-                    Continuar
+                  <v-btn color="blue darken-1" text @click="saveData">
+                    {{ formTitle }}
                   </v-btn>
                 </v-card-actions>
               </v-card>
             </v-dialog>
             <v-dialog v-model="dialogDelete" max-width="500px">
               <v-card>
-                <v-card-title class="text"
-                  >Eliminar este elemento?</v-card-title
-                >
+                <v-card-title class="text">Eliminar este elemento?</v-card-title>
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                  <v-btn color="blue darken-1" text @click="closeDelete"
-                    >Cancelar</v-btn
-                  >
-                  <v-btn color="blue darken-1" text @click="deleteItemConfirm"
-                    >Continuar</v-btn
-                  >
+                  <v-btn color="blue darken-1" text @click="closeDelete">Cancelar</v-btn>
+                  <v-btn color="blue darken-1" text @click="deleteItemConfirm">Continuar</v-btn>
                   <v-spacer></v-spacer>
                 </v-card-actions>
               </v-card>
@@ -144,7 +134,7 @@ export default {
           console.log(err);
         });
     },
-    postMapping() {},
+    postMapping() { },
     save() {
       if (this.editedIndex > -1) {
         Object.assign(this.desserts[this.editedIndex], this.editedItem);

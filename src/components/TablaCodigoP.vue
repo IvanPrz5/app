@@ -1,19 +1,19 @@
 <template>
   <v-container>
-    <v-data-table :headers="headers" :items="desserts" class="elevation-1">
+    <v-data-table :search="search" :headers="headers" :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Codigo Postal</v-toolbar-title>
-          <v-divider class="mx-15" inset vertical></v-divider>
-          <v-spacer></v-spacer>
+          <v-divider class="mx-6" inset vertical></v-divider>
           <template>
             <v-dialog v-model="dialog" max-width="500px">
               <template v-slot:activator="{ on, attrs }">
-                <v-btn color="success" dark v-bind="attrs" v-on="on" @click="postMapping">
+                <v-btn color="success" dark v-bind="attrs" v-on="on">
                   <v-icon>mdi-plus</v-icon>
                 </v-btn>
-                <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line
-                  hide-details></v-text-field>
+                <v-divider class="mx-6" inset vertical></v-divider>
+                <v-text-field v-model="search" append-icon="mdi-magnify" label="Buscar" hide-details>
+                </v-text-field>
               </template>
               <v-card>
                 <v-card-title>
@@ -21,23 +21,13 @@
                 </v-card-title>
                 <v-card-text>
                   <v-container>
-                    <v-row @submit.prevent="save">
-                      <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="Clave" v-model="customer.customerClave" ></v-text-field>
-                      </v-col>
-                      <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="Estado"></v-text-field>
-                      </v-col>
-                      <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="ID Municipio"></v-text-field>
-                      </v-col>
-                      <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="ID Localidad"></v-text-field>
-                      </v-col>
-                      <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="Status"></v-text-field>
-                      </v-col>
-                    </v-row>
+                    <v-text-field label="ID" v-model="editedItem.id"></v-text-field>
+                    <v-text-field label="Estado" v-model="editedItem.estado"></v-text-field>
+                    <v-text-field label="Cod Municipio" v-model="editedItem.codmunicipio"></v-text-field>
+                    <v-text-field label="Cod Localidad" v-model="editedItem.codlocalidad"></v-text-field>
+                    <v-text-field label="ID Municipio" v-model="editedItem.idmunicipio"></v-text-field>
+                    <v-text-field label="ID Localidad" v-model="editedItem.idlocalidad"></v-text-field>
+                    <v-text-field label="Status" v-model="editedItem.status"></v-text-field>
                   </v-container>
                 </v-card-text>
                 <v-card-actions>
@@ -45,13 +35,13 @@
                   <v-btn color="blue darken-1" text @click="close">
                     Cancelar
                   </v-btn>
-                  <v-btn color="blue darken-1" text @click="save">
-                    Continuar
+                  <v-btn color="blue darken-1" text @click="saveData">
+                    {{ formTitle }}
                   </v-btn>
                 </v-card-actions>
               </v-card>
             </v-dialog>
-            <v-dialog v-model="dialogDelete" max-width="500px">
+            <!-- <v-dialog v-model="dialogDelete" max-width="500px">
               <v-card>
                 <v-card-title class="text">Eliminar este elemento?</v-card-title>
                 <v-card-actions>
@@ -61,13 +51,17 @@
                   <v-spacer></v-spacer>
                 </v-card-actions>
               </v-card>
-            </v-dialog>
+            </v-dialog> -->
           </template>
         </v-toolbar>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <v-icon small class="mr-6" @click="editItem(item)">mdi-pencil</v-icon>
-        <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
+        <v-btn class="mr-3" elevation="1" color="primary" fab tile x-small @click="editItem(item)">
+          <v-icon small> mdi-pencil </v-icon>
+        </v-btn>
+        <v-btn elevation="1" color="error" fab tile x-small @click="deleteMapping(item.id)">
+          <v-icon small> mdi-delete </v-icon>
+        </v-btn>
       </template>
     </v-data-table>
   </v-container>
@@ -80,18 +74,21 @@ import axios from "axios";
 export default {
   name: "TablaCFDI",
   data: () => ({
+    search: "",
+    valid: true,
     headers: [
       {
-        text: "Clave",
+        text: "ID",
         align: "start",
-        value: "clave",
+        value: "id",
         sortable: false,
       },
       { text: "Estado", value: "estado", sortable: false },
-      { text: "Cod Municipio", value: "cmunicipio", sortable: false },
-      { text: "Cod Localidad", value: "clocalidad", sortable: false },
+      { text: "Cod Municipio", value: "codmunicipio", sortable: false },
+      { text: "Cod Localidad", value: "codlocalidad", sortable: false },
       { text: "ID Municipio", value: "idmunicipio", sortable: false },
       { text: "ID Localidad", value: "idlocalidad", sortable: false },
+      { text: "Status", value: "status", },
       { text: "Actions", value: "actions", sortable: false },
     ],
     titleTable: "Aduana",
@@ -100,11 +97,21 @@ export default {
     dialog: false,
     dialogDelete: false,
     editedIndex: -1,
-    editedItem: {},
+    editedItem: [
+      {
+        id: "",
+        estado: "",
+        codmunicipio: "",
+        codlocalidad: "",
+        idmunicipio: "",
+        idlocalidad: "",
+        status: "",
+      }
+    ],
     defaultItem: {},
   }),
   created() {
-    this.initialize();
+    this.showData();
   },
   watch: {
     dialog(val) {
@@ -120,36 +127,74 @@ export default {
     },
   },
   methods: {
-    initialize() {
+    showData() {
+      this.desserts.length = "";
       axios
         .get("http://localhost:8081/CodigoPostal")
         .then((response) => {
           this.result = response.data.data;
-          //console.log(response.data);
+          console.log(response.data);
           for (let i = 0; i < response.data.length; i++) {
             this.desserts.push({
-              clave: response.data[i].ccodigoPostal,
+              id: response.data[i].ccodigoPostal,
               estado: response.data[i].estado.cestado,
-              cmunicipio: response.data[i].municipios.cmunicipio,
-              clocalidad: response.data[i].localidades.clocalidad,
+              codmunicipio: response.data[i].municipios.cmunicipio,
+              codlocalidad: response.data[i].localidades.clocalidad,
               idmunicipio: response.data[i].municipios.idMunicipio,
               idlocalidad: response.data[i].localidades.idLocalidad,
               status: response.data[i].status,
             });
           }
         })
-        .catch((err) => {
-          console.log(err);
-        });
     },
-    postMapping() { },
-    save() {
+    //ingresar registro otra vez
+    saveData: function () {
+      // let selectTabla = this.tablasD[this.tablaData];
       if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedItem);
+        axios
+          .put(
+            "http://localhost:8081/CodigoPostal/" + this.editedItem.id,
+            {
+              ccodigoPostal: this.editedItem.id,
+              cestado: this.editedItem.estado,
+              cmunicipio: this.editedItem.codmunicipio,
+              clocalidad: this.editedItem.codlocalidad,
+              idMunicipio: this.editedItem.idMunicipio,
+              idLocalidad: this.editedItem.idLocalidad,
+              status: this.editedItem.status,
+            }
+          )
+          .then(() => {
+            // console.log(response);
+            this.showData();
+            this.close();
+          });
       } else {
-        this.desserts.push(this.editedItem);
+        axios
+          .post("http://localhost:8081/CodigoPostal", {
+             ccodigoPostal: this.editedItem.id,
+              cestado: this.editedItem.estado.cestado,
+              cmunicipio: this.editedItem.codmunicipio,
+              clocalidad: this.editedItem.codlocalidad,
+              idMunicipio: this.editedItem.idMunicipio,
+              idLocalidad: this.editedItem.idLocalidad,
+              status: this.editedItem.status,
+            
+          })
+          .then(() => {
+            // console.log(response);
+            this.showData();
+            this.close();
+          });
       }
-      this.close();
+    },
+    deleteMapping: function (id) {
+      console.log(id)
+      axios
+        .delete("http://localhost:8081/CodigoPostal/" + id)
+        .then(() => {
+          this.showData();
+        });
     },
     close() {
       this.dialog = false;
@@ -163,22 +208,9 @@ export default {
       this.editedItem = Object.assign({}, item);
       this.dialog = true;
     },
-    deleteItem(item) {
-      this.editedIndex = this.desserts.indexOf(item);
-      this.editedItem = Object.assign({}, item);
-      this.dialogDelete = true;
+    validate() {
+      this.$refs.form.validate();
     },
-    deleteItemConfirm() {
-      this.desserts.splice(this.editedIndex, 1);
-      this.closeDelete();
-    },
-    closeDelete() {
-      this.dialogDelete = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
-    },
-  },
+  }
 };
 </script>

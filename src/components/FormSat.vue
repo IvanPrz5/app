@@ -1,13 +1,14 @@
 <template>
   <v-container>
     <v-overflow-btn class="my-2" label="Aduana" v-model="tablaData" :items="tablas" @change="showData"></v-overflow-btn>
-    <v-data-table :search="search" :headers="headers" :items="desserts" class="elevation-1">
+    <v-data-table v-if="tablaData != 'UsoCFDI' && tablaData != 'ClaveUnidad' && tablaData != 'CodigoPostal' && tablaData != 'TasaoCuota'" :search="search" :headers="headers"
+      :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>{{ titleTable }}</v-toolbar-title>
           <v-divider class="mx-6" inset vertical></v-divider>
           <template>
-            <v-dialog v-model="dialog" max-width="500px">
+            <v-dialog v-model="dialog" max-width="400px">
               <template v-slot:activator="{ on, attrs }">
                 <v-btn color="success" dark v-bind="attrs" v-on="on">
                   <v-icon>mdi-plus</v-icon>
@@ -23,27 +24,20 @@
                 <v-card-text>
                   <v-container>
                     <v-form ref="form" v-model="valid" lazy-validation>
-                      <v-row>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Codigo" v-model="editedItem.codigo" required></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Descripcion" v-model="editedItem.descripcion" required></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-switch label="Status" v-model="editedItem.status" required></v-switch>
-                        </v-col>
-                      </v-row>
+                      <v-text-field label="ID" v-model="editedItem.id" required></v-text-field>
+                      <v-text-field label="Descripcion" v-model="editedItem.descripcion" required></v-text-field>
+                      <v-text-field label="Palabras Similares" v-if="tablaData == 'ClaveProdServ'" v-model="editedItem.palabras" required></v-text-field>
+                      <v-switch label="Status" v-model="editedItem.status" required></v-switch>
                     </v-form>
                   </v-container>
                 </v-card-text>
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                  <v-btn color="blue darken-1" text @click="close">
+                  <v-btn color="error darken-1" text @click="close">
                     Cancelar
                   </v-btn>
                   <v-btn color="blue darken-1" text @click="saveData">
-                    Continuar
+                    {{ formTitle }}
                   </v-btn>
                 </v-card-actions>
               </v-card>
@@ -55,20 +49,33 @@
         <v-btn class="mr-3" elevation="1" color="primary" fab tile x-small @click="editItem(item)">
           <v-icon small> mdi-pencil </v-icon>
         </v-btn>
-        <v-btn elevation="1" color="error" fab tile x-small @click="deleteMapping(item.codigo)">
-        <v-icon small> mdi-delete </v-icon>
+        <v-btn elevation="1" color="error" fab tile x-small @click="deleteMapping(item.id)">
+          <v-icon small> mdi-delete </v-icon>
         </v-btn>
       </template>
     </v-data-table>
+    <TablaCFDI v-if="tablaData == 'UsoCFDI'" />
+    <TablaClaveUni v-if="tablaData == 'ClaveUnidad'" />
+    <TablaCodigoP v-if="tablaData == 'CodigoPostal'" />
+    <TablaTasaCutoa v-if="tablaData == 'TasaoCuota'" />
   </v-container>
 </template>
 
 <script>
 import axios from "axios";
-/* import ModalAdd from "./ModalAdd.vue"; */
+import TablaCFDI from "./TablaCFDI.vue";
+import TablaClaveUni from "./TablaClaveUni.vue";
+import TablaCodigoP from "./TablaCodigoP.vue";
+import TablaTasaCutoa from "./TablaTasaCutoa.vue";
 
 export default {
   name: "FormSat",
+  components: {
+    TablaCFDI,
+    TablaClaveUni,
+    TablaCodigoP,
+    TablaTasaCutoa,
+  },
   data: () => ({
     search: "",
     valid: true,
@@ -76,12 +83,11 @@ export default {
       {
         text: "ID",
         align: "start",
-        value: "codigo",
-        sortable: false,
+        value: "id",
       },
-      { text: "Descripción", value: "descripcion", sortable: false },
-      { text: "Status", value: "status", sortable: false },
-      { text: "Opciones", value: "actions", sortable: false },
+      { text: "Descripción", value: "descripcion" },
+      { text: "Status", value: "status" },
+      { text: "Opciones", value: "actions" },
     ],
     titleTable: "Aduana",
     desserts: [],
@@ -91,7 +97,7 @@ export default {
     editedIndex: -1,
     editedItem: [
       {
-        codigo: "",
+        id: "",
         descripcion: "",
         status: "",
       },
@@ -100,15 +106,20 @@ export default {
     tablaData: "Aduana",
     tablas: [
       "Aduana",
+      "ClaveUnidad",
+      "ClaveProdServ",
+      "CodigoPostal",
       "Exportacion",
       "Meses",
       "MetodoPago",
       "Moneda",
-      "ObjetoImpuesto",
+      "ObjetoImp",
       "Pais",
       "Periodicidad",
+      "TasaoCuota",
       "TipoComprobante",
       "TipoRelacion",
+      "UsoCFDI"
     ],
     tablasD: {
       Aduana: "Aduana",
@@ -120,19 +131,21 @@ export default {
       Periodicidad: "Periodicidad",
       TipoComprobante: "TipoComprobante",
       TipoRelacion: "TipoRelacion",
-      ObjetoImpuesto: "ObjetoImp",
+      ObjetoImp: "ObjetoImp",
     },
     tablasTitle: {
       Aduana: "Aduana",
+      Asentamientos: "Asentamientos",
       Exportacion: "Exportacion",
       Meses: "Meses",
       MetodoPago: "Metodo De Pago",
       Moneda: "Moneda",
+      ObjetoImp: "Impuesto Al Objeto",
       Pais: "Pais",
       Periodicidad: "Periodicidad",
+      TasaoCuota:"Tasa o Cuota",
       TipoComprobante: "Tipo De Comprobante",
       TipoRelacion: "Tipo De Relacion",
-      ObjetoImpuesto: "Impuesto Al Objeto",
     },
   }),
   created() {
@@ -160,7 +173,7 @@ export default {
           //console.log(response.data);
           for (let i = 0; i < response.data.length; i++) {
             this.desserts.push({
-              codigo: response.data[i].id,
+              id: response.data[i].id,
               descripcion: response.data[i].descripcion,
               status: response.data[i].status,
             });
@@ -171,14 +184,14 @@ export default {
         });
     },
     showData() {
-      let selectTabla = this.tablasD[this.tablaData];
+      let selectTabla = this.tablaData;
       this.desserts.length = "";
       this.titleTable = this.tablasTitle[this.tablaData];
       axios.get("http://localhost:8081/" + selectTabla).then((response) => {
         this.result = response.data.data;
         for (let i = 0; i < response.data.length; i++) {
           this.desserts.push({
-            codigo: response.data[i].id,
+            id: response.data[i].id,
             descripcion: response.data[i].descripcion,
             status: response.data[i].status,
           });
@@ -187,17 +200,15 @@ export default {
     },
     saveData: function () {
       let selectTabla = this.tablasD[this.tablaData];
-      // || this.id != "" || this.id != null
-      //console.log(this.editedItem.codigo);
       if (this.editedIndex > -1) {
         axios
           .put(
             "http://localhost:8081/" +
             selectTabla +
             "/" +
-            this.editedItem.codigo,
+            this.editedItem.id,
             {
-              id: this.editedItem.codigo,
+              id: this.editedItem.id,
               descripcion: this.editedItem.descripcion,
               status: this.editedItem.status,
             }
@@ -210,7 +221,7 @@ export default {
       } else {
         axios
           .post("http://localhost:8081/" + selectTabla, {
-            id: this.editedItem.codigo,
+            id: this.editedItem.id,
             descripcion: this.editedItem.descripcion,
             status: this.editedItem.status,
           })
@@ -221,11 +232,11 @@ export default {
           });
       }
     },
-    deleteMapping: function (codigo) {
+    deleteMapping: function (id) {
       //console.log(codigo);
       let selectTabla = this.tablasD[this.tablaData];
       axios
-        .delete("http://localhost:8081/" + selectTabla + "/" + codigo)
+        .delete("http://localhost:8081/" + selectTabla + "/" + id)
         .then(() => {
           this.showData();
         });
