@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <v-data-table :headers="headers" :items="desserts" class="elevation-1">
+    <v-data-table :search="search" :headers="headers" :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Clave Producto Servicio</v-toolbar-title>
@@ -21,20 +21,10 @@
                 </v-card-title>
                 <v-card-text>
                   <v-container>
-                    <v-row>
-                      <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="Clave"></v-text-field>
-                      </v-col>
-                      <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="Descripcion"></v-text-field>
-                      </v-col>
-                      <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="Palabras Similares"></v-text-field>
-                      </v-col>
-                      <v-col cols="12" sm="6" md="4">
-                        <v-text-field label="Status"></v-text-field>
-                      </v-col>
-                    </v-row>
+                    <v-text-field label="Clave" v-model="editedItem.id"></v-text-field>
+                    <v-text-field label="Descripcion" v-model="editedItem.descripcion"></v-text-field>
+                    <v-text-field label="Palabras Similares" v-model="editedItem.palabras"></v-text-field>
+                    <v-switch label="Status" v-model="editedItem.status" required></v-switch>
                   </v-container>
                 </v-card-text>
                 <v-card-actions>
@@ -48,23 +38,16 @@
                 </v-card-actions>
               </v-card>
             </v-dialog>
-            <v-dialog v-model="dialogDelete" max-width="500px">
-              <v-card>
-                <v-card-title class="text">Eliminar este elemento?</v-card-title>
-                <v-card-actions>
-                  <v-spacer></v-spacer>
-                  <v-btn color="blue darken-1" text @click="closeDelete">Cancelar</v-btn>
-                  <v-btn color="blue darken-1" text @click="deleteItemConfirm">Continuar</v-btn>
-                  <v-spacer></v-spacer>
-                </v-card-actions>
-              </v-card>
-            </v-dialog>
           </template>
         </v-toolbar>
       </template>
       <template v-slot:[`item.actions`]="{ item }">
-        <v-icon small class="mr-6" @click="editItem(item)">mdi-pencil</v-icon>
-        <v-icon small @click="deleteItem(item)"> mdi-delete </v-icon>
+        <v-btn class="mr-3" elevation="1" color="primary" fab tile x-small @click="editItem(item)">
+          <v-icon small> mdi-pencil </v-icon>
+        </v-btn>
+        <v-btn elevation="1" color="error" fab tile x-small @click="deleteMapping(item.id)">
+          <v-icon small> mdi-delete </v-icon>
+        </v-btn>
       </template>
     </v-data-table>
   </v-container>
@@ -72,16 +55,17 @@
 
 <script>
 import axios from "axios";
-/* import ModalAdd from "./ModalAdd.vue"; */
 
 export default {
   name: "TablaClaveProd",
   data: () => ({
+    search: "",
+    valid: true,
     headers: [
       {
         text: "Clave de Producto",
         align: "start",
-        value: "clave",
+        value: "id",
         sortable: false,
       },
       { text: "Descripcion", value: "descripcion", sortable: false },
@@ -89,17 +73,21 @@ export default {
       { text: "Status", value: "status", sortable: false },
       { text: "Actions", value: "actions", sortable: false },
     ],
-    titleTable: "Aduana",
+    titleTable: "Clave De Producto",
     desserts: [],
     result: [],
     dialog: false,
     dialogDelete: false,
     editedIndex: -1,
-    editedItem: {},
-    defaultItem: {},
+    editedItem: [{
+      id: "",
+      descripcion: "",
+      palabras: "",
+      status: "",
+    }],
   }),
   created() {
-    this.initialize();
+    this.showData();
   },
   watch: {
     dialog(val) {
@@ -115,33 +103,62 @@ export default {
     },
   },
   methods: {
-    initialize() {
+    showData() {
+      this.desserts.length = "";
       axios
         .get("http://localhost:8081/ClaveProdServ")
         .then((response) => {
           this.result = response.data.data;
-          console.log(response.data);
+          //console.log(response.data);
           for (let i = 0; i < response.data.length; i++) {
             this.desserts.push({
-              clave: response.data[i].cclaveProdServ,
+              id: response.data[i].id,
               descripcion: response.data[i].descripcion,
               palabras: response.data[i].palabrasSimilares,
               status: response.data[i].status,
             });
           }
         })
-        .catch((err) => {
-          console.log(err);
-        });
     },
-    postMapping() { },
-    save() {
+    saveData: function () {
       if (this.editedIndex > -1) {
-        Object.assign(this.desserts[this.editedIndex], this.editedItem);
+        axios
+          .put(
+            "http://localhost:8081/ClaveProdServ/" + this.editedItem.id,
+            {
+              id: this.editedItem.id,
+              descripcion: this.editedItem.descripcion,
+              palabrasSimilares: this.editedItem.palabras,
+              status: this.editedItem.status,
+            }
+          )
+          .then(() => {
+            // console.log(response);
+            this.showData();
+            this.close();
+          });
       } else {
-        this.desserts.push(this.editedItem);
+        axios
+          .post("http://localhost:8081/ClaveProdServ", {
+            id: this.editedItem.id,
+            descripcion: this.editedItem.descripcion,
+            palabrasSimilares: this.editedItem.palabras,
+            status: this.editedItem.status,
+          })
+          .then(() => {
+            // console.log(response);
+            this.showData();
+            this.close();
+          });
       }
-      this.close();
+    },
+    deleteMapping: function (id) {
+      //console.log(id)
+      axios
+        .delete("http://localhost:8081/ClaveProdServ/" + id)
+        .then(() => {
+          this.showData();
+        });
     },
     close() {
       this.dialog = false;
@@ -155,22 +172,9 @@ export default {
       this.editedItem = Object.assign({}, item);
       this.dialog = true;
     },
-    deleteItem(item) {
-      this.editedIndex = this.desserts.indexOf(item);
-      this.editedItem = Object.assign({}, item);
-      this.dialogDelete = true;
+    validate() {
+      this.$refs.form.validate();
     },
-    deleteItemConfirm() {
-      this.desserts.splice(this.editedIndex, 1);
-      this.closeDelete();
-    },
-    closeDelete() {
-      this.dialogDelete = false;
-      this.$nextTick(() => {
-        this.editedItem = Object.assign({}, this.defaultItem);
-        this.editedIndex = -1;
-      });
-    },
-  },
+  }
 };
 </script>

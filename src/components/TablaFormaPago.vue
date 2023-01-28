@@ -3,7 +3,7 @@
     <v-data-table :search="search" :headers="headers" :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
-          <v-toolbar-title>Uso CFDI</v-toolbar-title>
+          <v-toolbar-title>Forma de Pago</v-toolbar-title>
           <v-divider class="mx-6" inset vertical></v-divider>
           <template>
             <v-dialog v-model="dialog" max-width="500px">
@@ -21,28 +21,11 @@
                 </v-card-title>
                 <v-card-text>
                   <v-container>
-                    <v-form ref="form" v-model="valid" lazy-validation>
-                      <v-row>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="ID" v-model="editedItem.id"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Descripcion" v-model="editedItem.descripcion"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Fisica" v-model="editedItem.fisica"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Moral" v-model="editedItem.moral"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Regimen Fiscal" v-model="editedItem.regimen"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-switch label="Status" v-model="editedItem.status" required></v-switch>
-                        </v-col>
-                      </v-row>
-                    </v-form>
+                    <v-text-field label="ID" v-model="editedItem.id"></v-text-field>
+                    <v-text-field label="Descripcion" v-model="editedItem.descripcion"></v-text-field>
+                    <v-text-field label="Bancarizado" v-model="editedItem.bancarizado"></v-text-field>
+                    <v-text-field label="Banco Emisor" v-model="editedItem.emisor"></v-text-field>
+                    <v-switch label="Status" v-model="editedItem.status" required></v-switch>
                   </v-container>
                 </v-card-text>
                 <v-card-actions>
@@ -73,10 +56,9 @@
 
 <script>
 import axios from "axios";
-/* import ModalAdd from "./ModalAdd.vue"; */
 
 export default {
-  name: "TablaCFDI",
+  name: "TablaFormaPago",
   data: () => ({
     search: "",
     valid: true,
@@ -85,15 +67,15 @@ export default {
         text: "ID",
         align: "start",
         value: "id",
+        sortable: false,
       },
-      { text: "Descripcion", value: "descripcion", },
-      { text: "Fisica", value: "fisica", },
-      { text: "Moral", value: "moral", },
-      { text: "Regimen Fiscal Receptor", value: "regimen", },
-      { text: "Status", value: "status", },
-      { text: "Actions", value: "actions", },
+      { text: "Descripcion", value: "descripcion", sortable: false },
+      { text: "Bancarizado", value: "bancarizado", sortable: false },
+      { text: "Banco Emisor(Extranjero)", value: "emisor", sortable: false },
+      { text: "Status", value: "status", sortable: false },
+      { text: "Actions", value: "actions", sortable: false },
     ],
-    titleTable: "Uso CFDI",
+    titleTable: "Clave De Producto",
     desserts: [],
     result: [],
     dialog: false,
@@ -103,9 +85,8 @@ export default {
       {
         id: "",
         descripcion: "",
-        fisica: "",
-        moral: "",
-        regimen: "",
+        bancarizado: "",
+        emisor: "",
         status: "",
       },
     ],
@@ -129,38 +110,30 @@ export default {
   methods: {
     showData() {
       this.desserts.length = "";
-      axios
-        .get("http://localhost:8081/UsoCFDI")
-        .then((response) => {
-          this.result = response.data.data;
-          //console.log(response.data);
-          for (let i = 0; i < response.data.length; i++) {
-            this.desserts.push({
-              id: response.data[i].id,
-              descripcion: response.data[i].descripcion,
-              fisica: response.data[i].fisica,
-              moral: response.data[i].moral,
-              regimen: response.data[i].regimenFiscalReceptor,
-              status: response.data[i].status,
-            });
-          }
-        })
+      axios.get("http://localhost:8081/FormaPago").then((response) => {
+        this.result = response.data.data;
+        //console.log(response.data);
+        for (let i = 0; i < response.data.length; i++) {
+          this.desserts.push({
+            id: response.data[i].id,
+            descripcion: response.data[i].descripcion,
+            bancarizado: response.data[i].bancarizado,
+            emisor: response.data[i].nombreBancoEmisorExtranjero,
+            status: response.data[i].status,
+          });
+        }
+      });
     },
     saveData: function () {
-      // let selectTabla = this.tablasD[this.tablaData];
       if (this.editedIndex > -1) {
         axios
-          .put(
-            "http://localhost:8081/UsoCFDI/" + this.editedItem.id,
-            {
-              id: this.editedItem.id,
-              descripcion: this.editedItem.descripcion,
-              fisica: this.editedItem.fisica,
-              moral: this.editedItem.moral,
-              regimenFiscalReceptor: this.editedItem.regimen,
-              status: this.editedItem.status,
-            }
-          )
+          .put("http://localhost:8081/FormaPago/" + this.editedItem.id, {
+            id: this.editedItem.id,
+            descripcion: this.editedItem.descripcion,
+            bancarizado: this.editedItem.bancarizado,
+            nombreBancoEmisorExtranjero: this.editedItem.emisor,
+            status: this.editedItem.status,
+          })
           .then(() => {
             // console.log(response);
             this.showData();
@@ -168,12 +141,11 @@ export default {
           });
       } else {
         axios
-          .post("http://localhost:8081/UsoCFDI", {
+          .post("http://localhost:8081/FormaPago", {
             id: this.editedItem.id,
             descripcion: this.editedItem.descripcion,
-            fisica: this.editedItem.fisica,
-            moral: this.editedItem.moral,
-            regimenFiscalReceptor: this.editedItem.regimen,
+            bancarizado: this.editedItem.bancarizado,
+            nombreBancoEmisorExtranjero: this.editedItem.emisor,
             status: this.editedItem.status,
           })
           .then(() => {
@@ -184,12 +156,10 @@ export default {
       }
     },
     deleteMapping: function (id) {
-      // console.log(id)
-      axios
-        .delete("http://localhost:8081/UsoCFDI/" + id)
-        .then(() => {
-          this.showData();
-        });
+      //console.log(id)
+      axios.delete("http://localhost:8081/FormaPago/" + id).then(() => {
+        this.showData();
+      });
     },
     close() {
       this.dialog = false;
@@ -206,6 +176,6 @@ export default {
     validate() {
       this.$refs.form.validate();
     },
-  }
+  },
 };
 </script>

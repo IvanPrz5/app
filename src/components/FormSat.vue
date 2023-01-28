@@ -1,8 +1,9 @@
 <template>
   <v-container>
     <v-overflow-btn class="my-2" label="Aduana" v-model="tablaData" :items="tablas" @change="showData"></v-overflow-btn>
-    <v-data-table v-if="tablaData != 'UsoCFDI' && tablaData != 'ClaveUnidad' && tablaData != 'CodigoPostal' && tablaData != 'TasaoCuota'" :search="search" :headers="headers"
-      :items="desserts" class="elevation-1">
+    <v-data-table
+      v-if="tablaData != 'UsoCFDI' && tablaData != 'ClaveUnidad' && tablaData != 'CodigoPostal' && tablaData != 'TasaoCuota' && tablaData != 'ClaveProdServ' && tablaData != 'RegimenFiscal' && tablaData != 'Impuesto' && tablaData != 'FormaPago'"
+      :search="search" :headers="headers" :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>{{ titleTable }}</v-toolbar-title>
@@ -26,7 +27,6 @@
                     <v-form ref="form" v-model="valid" lazy-validation>
                       <v-text-field label="ID" v-model="editedItem.id" required></v-text-field>
                       <v-text-field label="Descripcion" v-model="editedItem.descripcion" required></v-text-field>
-                      <v-text-field label="Palabras Similares" v-if="tablaData == 'ClaveProdServ'" v-model="editedItem.palabras" required></v-text-field>
                       <v-switch label="Status" v-model="editedItem.status" required></v-switch>
                     </v-form>
                   </v-container>
@@ -54,10 +54,15 @@
         </v-btn>
       </template>
     </v-data-table>
+
     <TablaCFDI v-if="tablaData == 'UsoCFDI'" />
     <TablaClaveUni v-if="tablaData == 'ClaveUnidad'" />
-    <TablaCodigoP v-if="tablaData == 'CodigoPostal'" />
+    <LoaderComponent v-if="tablaData == 'CodigoPostal'" />
     <TablaTasaCutoa v-if="tablaData == 'TasaoCuota'" />
+    <TablaClaveProd v-if="tablaData == 'ClaveProdServ'" />
+    <TablaRegFis v-if="tablaData == 'RegimenFiscal'" />
+    <TablaImpuesto v-if="tablaData == 'Impuesto'" />
+    <TablaFormaPago v-if="tablaData == 'FormaPago'" />
   </v-container>
 </template>
 
@@ -65,16 +70,24 @@
 import axios from "axios";
 import TablaCFDI from "./TablaCFDI.vue";
 import TablaClaveUni from "./TablaClaveUni.vue";
-import TablaCodigoP from "./TablaCodigoP.vue";
+import LoaderComponent from "./LoaderComponent.vue";
 import TablaTasaCutoa from "./TablaTasaCutoa.vue";
+import TablaClaveProd from "./TablaClaveProd.vue";
+import TablaRegFis from "./TablaRegFis.vue";
+import TablaImpuesto from "./TablaImpuesto.vue"
+import TablaFormaPago from "./TablaFormaPago.vue";
 
 export default {
   name: "FormSat",
   components: {
     TablaCFDI,
     TablaClaveUni,
-    TablaCodigoP,
+    LoaderComponent,
     TablaTasaCutoa,
+    TablaClaveProd,
+    TablaRegFis,
+    TablaImpuesto,
+    TablaFormaPago,
   },
   data: () => ({
     search: "",
@@ -110,12 +123,15 @@ export default {
       "ClaveProdServ",
       "CodigoPostal",
       "Exportacion",
+      "FormaPago",
+      "Impuesto",
       "Meses",
       "MetodoPago",
       "Moneda",
       "ObjetoImp",
       "Pais",
       "Periodicidad",
+      "RegimenFiscal",
       "TasaoCuota",
       "TipoComprobante",
       "TipoRelacion",
@@ -143,7 +159,7 @@ export default {
       ObjetoImp: "Impuesto Al Objeto",
       Pais: "Pais",
       Periodicidad: "Periodicidad",
-      TasaoCuota:"Tasa o Cuota",
+      TasaoCuota: "Tasa o Cuota",
       TipoComprobante: "Tipo De Comprobante",
       TipoRelacion: "Tipo De Relacion",
     },

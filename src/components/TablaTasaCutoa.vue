@@ -22,6 +22,7 @@
                 <v-card-text>
                   <v-container>
                     <v-form ref="form" v-model="valid" lazy-validation>
+                      <v-text-field label="ID" v-model="editedItem.id" v-show="false"></v-text-field>
                       <v-text-field label="Rango o Fijo" v-model="editedItem.rangofijo"></v-text-field>
                       <v-text-field label="Valor Minimo" v-model="editedItem.minimo"></v-text-field>
                       <v-text-field label="Valor Maximo" v-model="editedItem.maximo"></v-text-field>
@@ -61,13 +62,12 @@
 
 <script>
 import axios from "axios";
-/* import ModalAdd from "./ModalAdd.vue"; */
 
 export default {
   name: "TablaTasaCuota",
   data: () => ({
     search: "",
-    valid: "true",
+    valid: true,
     headers: [
       {
         text: "Rango O Fijo",
@@ -81,10 +81,10 @@ export default {
       { text: "Factor", value: "factor", sortable: false },
       { text: "Traslado", value: "traslado", sortable: false },
       { text: "Retencion", value: "retencion", sortable: false },
-      { text: "Status", value: "status", sortable: false },
+      { text: "Status", value: "status"},
       { text: "Actions", value: "actions", sortable: false },
     ],
-    titleTable: "Aduana",
+    titleTable: "Tasa o Cuota",
     desserts: [],
     result: [],
     dialog: false,
@@ -99,10 +99,10 @@ export default {
       traslado: "",
       retencion: "",
       status: "",
+      id:"",
     }],
-    defaultItem: {},
-
-  }), created() {
+  }), 
+  created() {
     this.showData();
   },
   watch: {
@@ -128,6 +128,7 @@ export default {
           //console.log(response.data);
           for (let i = 0; i < response.data.length; i++) {
             this.desserts.push({
+              id: response.data[i].ctasaCuota,
               rangofijo: response.data[i].rangoFijo,
               minimo: response.data[i].valorMinimo,
               maximo: response.data[i].valorMaximo,
@@ -141,7 +142,6 @@ export default {
         })
     },
     saveData: function () {
-      // let selectTabla = this.tablasD[this.tablaData];
       if (this.editedIndex > -1) {
         axios
           .put(
@@ -182,7 +182,7 @@ export default {
       }
     },
     deleteMapping: function (id) {
-      console.log(id)
+      //console.log(id)
       axios
         .delete("http://localhost:8081/TasaoCuota/" + id)
         .then(() => {

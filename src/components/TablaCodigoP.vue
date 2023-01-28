@@ -69,10 +69,9 @@
 
 <script>
 import axios from "axios";
-/* import ModalAdd from "./ModalAdd.vue"; */
 
 export default {
-  name: "TablaCFDI",
+  name: "TablaCodigoP",
   data: () => ({
     search: "",
     valid: true,
@@ -133,7 +132,7 @@ export default {
         .get("http://localhost:8081/CodigoPostal")
         .then((response) => {
           this.result = response.data.data;
-          console.log(response.data);
+          //console.log(response.data);
           for (let i = 0; i < response.data.length; i++) {
             this.desserts.push({
               id: response.data[i].ccodigoPostal,
@@ -172,14 +171,14 @@ export default {
       } else {
         axios
           .post("http://localhost:8081/CodigoPostal", {
-             ccodigoPostal: this.editedItem.id,
-              cestado: this.editedItem.estado.cestado,
-              cmunicipio: this.editedItem.codmunicipio,
-              clocalidad: this.editedItem.codlocalidad,
-              idMunicipio: this.editedItem.idMunicipio,
-              idLocalidad: this.editedItem.idLocalidad,
-              status: this.editedItem.status,
-            
+            ccodigoPostal: this.editedItem.id,
+            cestado: this.editedItem.estado.cestado,
+            cmunicipio: this.editedItem.codmunicipio,
+            clocalidad: this.editedItem.codlocalidad,
+            idMunicipio: this.editedItem.idMunicipio,
+            idLocalidad: this.editedItem.idLocalidad,
+            status: this.editedItem.status,
+
           })
           .then(() => {
             // console.log(response);
@@ -189,7 +188,7 @@ export default {
       }
     },
     deleteMapping: function (id) {
-      console.log(id)
+      //console.log(id)
       axios
         .delete("http://localhost:8081/CodigoPostal/" + id)
         .then(() => {

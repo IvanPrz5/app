@@ -3,7 +3,7 @@
     <v-data-table :search="search" :headers="headers" :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
-          <v-toolbar-title>Uso CFDI</v-toolbar-title>
+          <v-toolbar-title>Impuesto</v-toolbar-title>
           <v-divider class="mx-6" inset vertical></v-divider>
           <template>
             <v-dialog v-model="dialog" max-width="500px">
@@ -21,28 +21,12 @@
                 </v-card-title>
                 <v-card-text>
                   <v-container>
-                    <v-form ref="form" v-model="valid" lazy-validation>
-                      <v-row>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="ID" v-model="editedItem.id"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Descripcion" v-model="editedItem.descripcion"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Fisica" v-model="editedItem.fisica"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Moral" v-model="editedItem.moral"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-text-field label="Regimen Fiscal" v-model="editedItem.regimen"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" sm="6" md="4">
-                          <v-switch label="Status" v-model="editedItem.status" required></v-switch>
-                        </v-col>
-                      </v-row>
-                    </v-form>
+                    <v-text-field label="ID" v-model="editedItem.id"></v-text-field>
+                    <v-text-field label="Descripcion" v-model="editedItem.descripcion"></v-text-field>
+                    <v-text-field label="Local o Federal" v-model="editedItem.localfederal"></v-text-field>
+                    <v-text-field label="Retencion" v-model="editedItem.retencion"></v-text-field>
+                    <v-text-field label="Traslado" v-model="editedItem.traslado"></v-text-field>
+                    <v-switch label="Status" v-model="editedItem.status" required></v-switch>
                   </v-container>
                 </v-card-text>
                 <v-card-actions>
@@ -73,10 +57,9 @@
 
 <script>
 import axios from "axios";
-/* import ModalAdd from "./ModalAdd.vue"; */
 
 export default {
-  name: "TablaCFDI",
+  name: "TablaImpuesto",
   data: () => ({
     search: "",
     valid: true,
@@ -85,30 +68,29 @@ export default {
         text: "ID",
         align: "start",
         value: "id",
+        sortable: false,
       },
-      { text: "Descripcion", value: "descripcion", },
-      { text: "Fisica", value: "fisica", },
-      { text: "Moral", value: "moral", },
-      { text: "Regimen Fiscal Receptor", value: "regimen", },
-      { text: "Status", value: "status", },
-      { text: "Actions", value: "actions", },
+      { text: "Descripcion", value: "descripcion", sortable: false },
+      { text: "Local o Federal", value: "localfederal", sortable: false },
+      { text: "Retencion", value: "retencion", sortable: false },
+      { text: "Traslado", value: "traslado", sortable: false },
+      { text: "Status", value: "status", sortable: false },
+      { text: "Actions", value: "actions", sortable: false },
     ],
-    titleTable: "Uso CFDI",
+    titleTable: "Clave De Producto",
     desserts: [],
     result: [],
     dialog: false,
     dialogDelete: false,
     editedIndex: -1,
-    editedItem: [
-      {
-        id: "",
-        descripcion: "",
-        fisica: "",
-        moral: "",
-        regimen: "",
-        status: "",
-      },
-    ],
+    editedItem: [{
+      id: "",
+      descripcion: "",
+      localfederal: "",
+      retencion: "",
+      traslado: "",
+      status: "",
+    }],
   }),
   created() {
     this.showData();
@@ -130,34 +112,33 @@ export default {
     showData() {
       this.desserts.length = "";
       axios
-        .get("http://localhost:8081/UsoCFDI")
+        .get("http://localhost:8081/Impuesto")
         .then((response) => {
           this.result = response.data.data;
-          //console.log(response.data);
+          // console.log(response.data);
           for (let i = 0; i < response.data.length; i++) {
             this.desserts.push({
               id: response.data[i].id,
               descripcion: response.data[i].descripcion,
-              fisica: response.data[i].fisica,
-              moral: response.data[i].moral,
-              regimen: response.data[i].regimenFiscalReceptor,
+              localfederal: response.data[i].localFederal,
+              retencion: response.data[i].retencion,
+              traslado: response.data[i].traslado,
               status: response.data[i].status,
             });
           }
         })
     },
     saveData: function () {
-      // let selectTabla = this.tablasD[this.tablaData];
       if (this.editedIndex > -1) {
         axios
           .put(
-            "http://localhost:8081/UsoCFDI/" + this.editedItem.id,
+            "http://localhost:8081/Impuesto/" + this.editedItem.id,
             {
               id: this.editedItem.id,
               descripcion: this.editedItem.descripcion,
-              fisica: this.editedItem.fisica,
-              moral: this.editedItem.moral,
-              regimenFiscalReceptor: this.editedItem.regimen,
+              localFederal: this.editedItem.localfederal,
+              retencion: this.editedItem.retencion,
+              traslado: this.editedItem.traslado,
               status: this.editedItem.status,
             }
           )
@@ -168,12 +149,12 @@ export default {
           });
       } else {
         axios
-          .post("http://localhost:8081/UsoCFDI", {
+          .post("http://localhost:8081/Impuesto", {
             id: this.editedItem.id,
             descripcion: this.editedItem.descripcion,
-            fisica: this.editedItem.fisica,
-            moral: this.editedItem.moral,
-            regimenFiscalReceptor: this.editedItem.regimen,
+            localFederal: this.editedItem.localfederal,
+            retencion: this.editedItem.retencion,
+            traslado: this.editedItem.traslado,
             status: this.editedItem.status,
           })
           .then(() => {
@@ -184,9 +165,9 @@ export default {
       }
     },
     deleteMapping: function (id) {
-      // console.log(id)
+      //console.log(id)
       axios
-        .delete("http://localhost:8081/UsoCFDI/" + id)
+        .delete("http://localhost:8081/Impuesto/" + id)
         .then(() => {
           this.showData();
         });

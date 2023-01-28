@@ -1,6 +1,6 @@
 <template>
   <v-container>
-    <v-data-table :headers="headers" :items="desserts" class="elevation-1">
+    <v-data-table :search="search" :headers="headers" :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Clave Unidad</v-toolbar-title>
