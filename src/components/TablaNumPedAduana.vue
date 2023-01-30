@@ -1,10 +1,10 @@
 <template>
   <v-container>
-    <LoaderComponent v-if="loading"/>
+    <LoaderComponent v-if="loading" />
     <v-data-table v-show="mostrar" :search="search" :headers="headers" :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
-          <v-toolbar-title>Clave Producto Servicio</v-toolbar-title>
+          <v-toolbar-title>Num. Pedimento Aduanal</v-toolbar-title>
           <v-divider class="mx-6" inset vertical></v-divider>
           <template>
             <v-dialog v-model="dialog" max-width="500px">
@@ -22,9 +22,9 @@
                 </v-card-title>
                 <v-card-text>
                   <v-container>
-                    <v-text-field label="Clave" v-model="editedItem.id"></v-text-field>
-                    <v-text-field label="Descripcion" v-model="editedItem.descripcion"></v-text-field>
-                    <v-text-field label="Palabras Similares" v-model="editedItem.palabras"></v-text-field>
+                    <v-text-field label="ID" v-model="editedItem.id" v-show="false"></v-text-field>
+                    <v-text-field label="Codigo Aduanal" v-model="editedItem.codigo"></v-text-field>
+                    <v-text-field label="Patente" v-model="editedItem.patente"></v-text-field>
                     <v-switch label="Status" v-model="editedItem.status" required></v-switch>
                   </v-container>
                 </v-card-text>
@@ -59,39 +59,39 @@ import axios from "axios";
 import LoaderComponent from "./LoaderComponent.vue";
 
 export default {
-  name: "TablaClaveProd",
-  components:{
+  name: "TablaNumPedAduana",
+  components: {
     LoaderComponent,
   },
   data: () => ({
-    loading:true,
-    mostrar:false,
+    loading: true,
+    mostrar: false,
     search: "",
     valid: true,
     headers: [
       {
-        text: "Clave de Producto",
+        text: "Codigo",
         align: "start",
-        value: "id",
+        value: "codigo",
         sortable: false,
       },
-      { text: "Descripcion", value: "descripcion", sortable: false },
-      { text: "PalabrasSimilares", value: "palabras", sortable: false },
+      { text: "Patente", value: "patente", sortable: false },
       { text: "Status", value: "status", sortable: false },
       { text: "Actions", value: "actions", sortable: false },
     ],
-    titleTable: "Clave De Producto",
     desserts: [],
     result: [],
     dialog: false,
     dialogDelete: false,
     editedIndex: -1,
-    editedItem: [{
-      id: "",
-      descripcion: "",
-      palabras: "",
-      status: "",
-    }],
+    editedItem: [
+      {
+        id: "",
+        codigo: "",
+        patente: "",
+        status: "",
+      },
+    ],
   }),
   created() {
     this.showData();
@@ -103,7 +103,7 @@ export default {
     dialogDelete(val) {
       val || this.closeDelete();
     },
-    loading(){
+    loading() {
       this.mostrar = true;
     },
   },
@@ -115,31 +115,28 @@ export default {
   methods: {
     showData() {
       this.desserts.length = "";
-      axios
-        .get("http://localhost:8081/ClaveProdServ")
-        .then((response) => {
-          this.result = response.data.data;
-          //console.log(response.data);
-          for (let i = 0; i < response.data.length; i++) {
-            this.desserts.push({
-              id: response.data[i].id,
-              descripcion: response.data[i].descripcion,
-              palabras: response.data[i].palabrasSimilares,
-              status: response.data[i].status,
-            });
-          }
-          this.loading = false;
-        })
+      axios.get("http://localhost:8081/NumPedimentoAduana").then((response) => {
+        this.result = response.data.data;
+        //console.log(response.data);
+        for (let i = 0; i < response.data.length; i++) {
+          this.desserts.push({
+            id: response.data[i].idNum,
+            codigo: response.data[i].caduana,
+            patente: response.data[i].patente,
+            status: response.data[i].status,
+          });
+        }
+        this.loading = false;
+      });
     },
     saveData: function () {
       if (this.editedIndex > -1) {
         axios
           .put(
-            "http://localhost:8081/ClaveProdServ/" + this.editedItem.id,
+            "http://localhost:8081/NumPedimentoAduana/" + this.editedItem.id,
             {
-              id: this.editedItem.id,
-              descripcion: this.editedItem.descripcion,
-              palabrasSimilares: this.editedItem.palabras,
+              caduana: this.editedItem.codigo,
+              patente: this.editedItem.patente,
               status: this.editedItem.status,
             }
           )
@@ -150,10 +147,9 @@ export default {
           });
       } else {
         axios
-          .post("http://localhost:8081/ClaveProdServ", {
-            id: this.editedItem.id,
-            descripcion: this.editedItem.descripcion,
-            palabrasSimilares: this.editedItem.palabras,
+          .post("http://localhost:8081/NumPedimentoAduana", {
+            caduana: this.editedItem.codigo,
+            patente: this.editedItem.patente,
             status: this.editedItem.status,
           })
           .then(() => {
@@ -165,11 +161,10 @@ export default {
     },
     deleteMapping: function (id) {
       //console.log(id)
-      axios
-        .delete("http://localhost:8081/ClaveProdServ/" + id)
-        .then(() => {
-          this.showData();
-        });
+      axios.delete("http://localhost:8081/NumPedimentoAduana/" + id)
+      .then(() => {
+        this.showData();
+      });
     },
     close() {
       this.dialog = false;
@@ -186,6 +181,6 @@ export default {
     validate() {
       this.$refs.form.validate();
     },
-  }
+  },
 };
 </script>

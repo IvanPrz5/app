@@ -1,8 +1,9 @@
 <template>
   <v-container>
+    <HomeView />
     <v-overflow-btn class="my-2" label="Aduana" v-model="tablaData" :items="tablas" @change="showData"></v-overflow-btn>
     <v-data-table
-      v-if="tablaData != 'UsoCFDI' && tablaData != 'ClaveUnidad' && tablaData != 'CodigoPostal' && tablaData != 'TasaoCuota' && tablaData != 'ClaveProdServ' && tablaData != 'RegimenFiscal' && tablaData != 'Impuesto' && tablaData != 'FormaPago'"
+      v-if="tablaData != 'UsoCFDI' && tablaData != 'ClaveUnidad' && tablaData != 'CodigoPostal' && tablaData != 'TasaoCuota' && tablaData != 'ClaveProdServ' && tablaData != 'RegimenFiscal' && tablaData != 'Impuesto' && tablaData != 'FormaPago' && tablaData != 'NumPedimentoAduana' && tablaData != 'Estado' && tablaData != 'Localidad' && tablaData != 'Municipio'"
       :search="search" :headers="headers" :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
@@ -54,15 +55,18 @@
         </v-btn>
       </template>
     </v-data-table>
-
     <TablaCFDI v-if="tablaData == 'UsoCFDI'" />
     <TablaClaveUni v-if="tablaData == 'ClaveUnidad'" />
-    <LoaderComponent v-if="tablaData == 'CodigoPostal'" />
+    <TablaCodigoP v-if="tablaData == 'CodigoPostal'" />
     <TablaTasaCutoa v-if="tablaData == 'TasaoCuota'" />
     <TablaClaveProd v-if="tablaData == 'ClaveProdServ'" />
     <TablaRegFis v-if="tablaData == 'RegimenFiscal'" />
     <TablaImpuesto v-if="tablaData == 'Impuesto'" />
     <TablaFormaPago v-if="tablaData == 'FormaPago'" />
+    <TablaNumPedAduana v-if="tablaData == 'NumPedimentoAduana'" />
+    <TablaEstado v-if="tablaData == 'Estado'" />
+    <TablaLocalidad v-if="tablaData == 'Localidad'" />
+    <TablaMunicipio v-if="tablaData == 'Municipio'" />
   </v-container>
 </template>
 
@@ -70,24 +74,34 @@
 import axios from "axios";
 import TablaCFDI from "./TablaCFDI.vue";
 import TablaClaveUni from "./TablaClaveUni.vue";
-import LoaderComponent from "./LoaderComponent.vue";
+import TablaCodigoP from "./TablaCodigoP.vue";
 import TablaTasaCutoa from "./TablaTasaCutoa.vue";
 import TablaClaveProd from "./TablaClaveProd.vue";
 import TablaRegFis from "./TablaRegFis.vue";
 import TablaImpuesto from "./TablaImpuesto.vue"
 import TablaFormaPago from "./TablaFormaPago.vue";
+import TablaNumPedAduana from "./TablaNumPedAduana.vue";
+import TablaEstado from "./TablaEstado.vue";
+import TablaLocalidad from "./TablaLocalidad.vue";
+import TablaMunicipio from "./TablaMunicipio.vue";
+import HomeView from "./HomeView.vue"
 
 export default {
-  name: "FormSat",
+  name: "TablasMain",
   components: {
+    HomeView,
     TablaCFDI,
     TablaClaveUni,
-    LoaderComponent,
+    TablaCodigoP,
     TablaTasaCutoa,
     TablaClaveProd,
     TablaRegFis,
     TablaImpuesto,
     TablaFormaPago,
+    TablaNumPedAduana,
+    TablaEstado,
+    TablaLocalidad,
+    TablaMunicipio,
   },
   data: () => ({
     search: "",
@@ -122,12 +136,16 @@ export default {
       "ClaveUnidad",
       "ClaveProdServ",
       "CodigoPostal",
+      "Estado",
       "Exportacion",
       "FormaPago",
       "Impuesto",
+      "Localidad",
       "Meses",
       "MetodoPago",
       "Moneda",
+      "Municipio",
+      "NumPedimentoAduana",
       "ObjetoImp",
       "Pais",
       "Periodicidad",

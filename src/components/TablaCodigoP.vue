@@ -1,6 +1,8 @@
 <template>
   <v-container>
-    <v-data-table :search="search" :headers="headers" :items="desserts" class="elevation-1">
+    <LoaderComponent v-if="loading"/>
+    <!-- <v-progress-circular v-if="loading" :size="50" color="primary" indeterminate></v-progress-circular> -->
+    <v-data-table v-show="mostrar" :search="search" :headers="headers" :items="desserts" class="elevation-1">
       <template v-slot:top>
         <v-toolbar flat>
           <v-toolbar-title>Codigo Postal</v-toolbar-title>
@@ -69,10 +71,16 @@
 
 <script>
 import axios from "axios";
+import LoaderComponent from "./LoaderComponent.vue";
 
 export default {
   name: "TablaCodigoP",
+  components:{
+    LoaderComponent,
+  },
   data: () => ({
+    loading:true,
+    mostrar:false,
     search: "",
     valid: true,
     headers: [
@@ -116,9 +124,9 @@ export default {
     dialog(val) {
       val || this.close();
     },
-    dialogDelete(val) {
-      val || this.closeDelete();
-    },
+    loading(){
+      this.mostrar = true;
+    }
   },
   computed: {
     formTitle() {
@@ -144,6 +152,7 @@ export default {
               status: response.data[i].status,
             });
           }
+          this.loading = false;
         })
     },
     //ingresar registro otra vez

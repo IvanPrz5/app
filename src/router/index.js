@@ -1,14 +1,14 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import FormSat from '../components/FormSat.vue'
+import TablasMain from '../components/TablasMain.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
   {
     path: '/',
-    name: 'FormSat',
-    component: FormSat
+    name: 'TablasMain',
+    component: TablasMain
   },
 ]
 
